@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from wsgiref import headers
 
 def __search_with_reasonable_error__(headers, index_name):
     try:
@@ -13,6 +14,8 @@ def headers_to_header_indices(headers):
     header_indices["full_title_index"] = __search_with_reasonable_error__(headers, "Card Title")
     header_indices["first_name_index"] = __search_with_reasonable_error__(headers, "FirstName")
     header_indices["last_name_index"] = __search_with_reasonable_error__(headers, "LastName")
+    header_indices["team_index"] = __search_with_reasonable_error__(headers, "Team")
+    header_indices["year_index"] = __search_with_reasonable_error__(headers, "Year")
     header_indices["ovr_index"] = __search_with_reasonable_error__(headers, "Card Value")
     header_indices["bats_index"] = __search_with_reasonable_error__(headers, "Bats")
     header_indices["throws_index"] = __search_with_reasonable_error__(headers, "Throws")
@@ -76,13 +79,15 @@ def headers_to_header_indices(headers):
 def new_base_card_player(header_indices, play_line):
     return BaseCardPlayer(
         cid=str(play_line[header_indices["cid_index"]]),
-        full_title=str(play_line[header_indices["cid_index"]]),
+        full_title=str(play_line[header_indices["full_title_index"]]),
         name=str(play_line[header_indices["first_name_index"]] + " " + play_line[header_indices["last_name_index"]]),
         first_name=str(play_line[header_indices["first_name_index"]]),
         last_name=str(play_line[header_indices["last_name_index"]]),
+        team=str(play_line[header_indices["team_index"]]),
+        year=int(play_line[header_indices["year_index"]]),
         ovr=int(play_line[header_indices["ovr_index"]]),
-        bats=int(play_line[header_indices["bats_index"]]),
-        throws=int(play_line[header_indices["throws_index"]]),
+        bats="R" if int(play_line[header_indices["bats_index"]]) == 1 else ("L" if int(play_line[header_indices["bats_index"]]) == 2 else "S"),
+        throws="R" if int(play_line[header_indices["throws_index"]]) == 1 else "L",
         con_ovr=int(play_line[header_indices["con_ovr_index"]]),
         gap_ovr=int(play_line[header_indices["gap_ovr_index"]]),
         pow_ovr=int(play_line[header_indices["pow_ovr_index"]]),
@@ -143,12 +148,14 @@ def new_base_card_player(header_indices, play_line):
 class BaseCardPlayer:
     cid: str
     full_title: str
+    team: str
+    year: int
     name: str
     first_name: str
     last_name: str
     ovr: int
-    bats: int
-    throws: int
+    bats: str
+    throws: str
     con_ovr: int
     gap_ovr: int
     pow_ovr: int
