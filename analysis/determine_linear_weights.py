@@ -41,6 +41,7 @@ class LinearWeightsFormulas:
     # give [baserunning rating] get ubr / (hits - homeruns)
     ubr_per_chance_from_baserunning: Callable[[int], float]
     runs_per_win: float
+    run_value_bases_out: float
 
 def get_woba_constants(
     players: List[SingleLineStatsPlayer],
@@ -98,5 +99,6 @@ def get_woba_constants(
             singles * woba_weights_analysis.slope[2] + doubles * woba_weights_analysis.slope[3] + triples * woba_weights_analysis.slope[4] + homeruns * woba_weights_analysis.slope[5] + woba_weights_analysis.intercept,
         wsb_from_steal_stats=lambda stolen_bases, caught_stealing: stolen_bases * wsb_analysis.slope[0] + caught_stealing * wsb_analysis.slope[1] + wsb_analysis.intercept,
         ubr_per_chance_from_baserunning=lambda baserunning: baserunning * ubr_analysis.slope + ubr_analysis.intercept,
-        runs_per_win=runs_per_win
+        runs_per_win=runs_per_win,
+        run_value_bases_out=wsb_analysis.slope[1]
     )

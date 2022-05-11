@@ -79,6 +79,7 @@ def merge_base_stats_players(a: BaseStatsPlayer, b: BaseStatsPlayer):
     c.cid_with_id = a.cid + "_"
     c.card_player = a.card_player
     c.position = a.position
+    c.team = "merged"
     c.stats_batter = __merge_total_stats_batter__(a.stats_batter, b.stats_batter)
 
     c.stats_pitcher = __merge_stats_pitchers__(a.stats_pitcher, b.stats_pitcher)

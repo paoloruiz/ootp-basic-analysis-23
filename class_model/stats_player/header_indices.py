@@ -29,6 +29,8 @@ def stats_headers_to_header_indices(headers: List[str]) -> StatsHeaderIndices:
     header_indices["cid_index"] = __search_with_reasonable_error__(headers, "CID")
     header_indices["id_index"] = __search_with_reasonable_error__(headers, "ID")
     header_indices["pos_index"] = __search_with_reasonable_error__(headers, "POS")
+    header_indices["tm_index"] = __search_with_reasonable_error__(headers, "TM")
+    header_indices["tm_short_index"] = header_indices["tm_index"] + 1 if headers[header_indices["tm_index"] + 1] == "TM" else -1
 
     return StatsHeaderIndices(
         main_header_indices=header_indices,

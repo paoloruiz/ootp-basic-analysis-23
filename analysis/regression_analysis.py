@@ -52,27 +52,39 @@ def __get_x_and_y__(
 def perform_bats_handedness_regression(
     players: List[SingleLineStatsPlayer],
     ram: RegressionAnalysisModel
-) -> Dict[str, RegressionAnalysis]:
+) -> Dict[str, Dict[str, RegressionAnalysis]]:
     right_hitters = list(filter(lambda x: x.card_player.bats == "R", players))
     left_hitters = list(filter(lambda x: x.card_player.bats == "L", players))
     switch_hitters = list(filter(lambda x: x.card_player.bats == "S", players))
     
     return {
-        "R": perform_regression(right_hitters, ram),
-        "L": perform_regression(left_hitters, ram),
-        "S": perform_regression(switch_hitters, ram)
+        "R": perform_high_low_regression(right_hitters, ram),
+        "L": perform_high_low_regression(left_hitters, ram),
+        "S": perform_high_low_regression(switch_hitters, ram)
     }
 
 def perform_throws_handedness_regression(
     players: List[SingleLineStatsPlayer],
     ram: RegressionAnalysisModel
-) -> Dict[str, RegressionAnalysis]:
+) -> Dict[str, Dict[str, RegressionAnalysis]]:
     right_throwers = list(filter(lambda x: x.card_player.throws == "R", players))
     left_throwers = list(filter(lambda x: x.card_player.throws == "L", players))
     
     return {
-        "R": perform_regression(right_throwers, ram),
-        "L": perform_regression(left_throwers, ram)
+        "R": perform_high_low_regression(right_throwers, ram),
+        "L": perform_high_low_regression(left_throwers, ram)
+    }
+
+def perform_high_low_regression(
+    players: List[SingleLineStatsPlayer],
+    ram: RegressionAnalysisModel
+) -> Dict[str, RegressionAnalysis]:
+    high_throwers = list(filter(lambda player: ram.get_x(player) >= 50, players))
+    low_throwers = list(filter(lambda player: ram.get_x(player) < 50, players))
+    
+    return {
+        "high": perform_regression(high_throwers, ram),
+        "low": perform_regression(low_throwers, ram)
     }
 
 def perform_regression(

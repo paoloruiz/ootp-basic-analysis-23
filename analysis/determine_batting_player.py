@@ -11,11 +11,12 @@ defensive_position_nums = [2, 3, 4, 5, 6, 7, 8, 9]
 
 def __generate_stat_formula__(analysis: Dict[str, RegressionAnalysis]) -> Callable[[str, int], float]:
     def formula(bats: str, stat: int) -> float:
-        handed_analysis: RegressionAnalysis = analysis["R"]
+        high_low = "high" if stat >= 50 else "low"
+        handed_analysis: RegressionAnalysis = analysis["R"][high_low]
         if bats == "L":
-            handed_analysis = analysis["L"]
+            handed_analysis = analysis["L"][high_low]
         elif bats == "S":
-            handed_analysis = analysis["S"]
+            handed_analysis = analysis["S"][high_low]
         
         return handed_analysis.slope * stat + handed_analysis.intercept
 

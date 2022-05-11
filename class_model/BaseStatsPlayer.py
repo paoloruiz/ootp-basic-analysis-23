@@ -27,6 +27,7 @@ class BaseStatsPlayer:
     cid_with_id: str = ""
     card_player: BaseCardPlayer = None
     position: str = ""
+    team: str = ""
     stats_batter: TotalStatsBatter = None
     stats_pitcher: TotalStatsPitcher = None
     stats_fielder: Dict[int, StatsFielder] = field(default=dict)
@@ -84,11 +85,13 @@ class SingleLineStatsPlayer:
         
 
 def new_base_stats_player(header_indices: StatsHeaderIndices, play_line: List[str], base_card_players: Dict[str, BaseCardPlayer]) -> BaseStatsPlayer:
+    team_short = "" if header_indices.main_header_indices["tm_short_index"] < 0 else str(play_line[header_indices.main_header_indices["tm_short_index"]])
     return BaseStatsPlayer(
         cid=str(play_line[header_indices.main_header_indices["cid_index"]]),
         cid_with_id=play_line[header_indices.main_header_indices["cid_index"]] + "_" + play_line[header_indices.main_header_indices["id_index"]],
         card_player=base_card_players[play_line[header_indices.main_header_indices["cid_index"]]],
         position=str(play_line[header_indices.main_header_indices["pos_index"]]),
+        team=str(play_line[header_indices.main_header_indices["tm_index"]]) + "_" + team_short,
         stats_batter=StatsBatter(),
         stats_pitcher=StatsPitcher(),
         stats_fielder={}

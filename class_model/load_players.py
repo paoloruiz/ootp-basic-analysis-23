@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List
+from typing import Dict
 from class_model.BaseCardPlayer import BaseCardPlayer, new_base_card_player, headers_to_header_indices
 from class_model.BaseStatsPlayer import BaseStatsPlayer, new_base_stats_player, read_in_fielder_info, read_in_ovr_info, read_in_reliever_info, read_in_starter_info, read_in_vl_info, read_in_vr_info
 from class_model.global_stats.AllLeagueStats import AllLeagueStats

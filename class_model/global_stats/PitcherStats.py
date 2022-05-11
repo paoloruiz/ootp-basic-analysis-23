@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Tuple
 from class_model.BaseCardPlayer import BaseCardPlayer
 
 from class_model.BaseStatsPlayer import BaseStatsPlayer
@@ -21,6 +21,17 @@ class PitcherStats:
     hbp_rate: Dict[str, HBPRate] = field(default_factory=dict)
     world_gb_rate: Dict[int, GBRate] = field(default_factory=dict)
     world_hbp_rate: HBPRate = HBPRate()
+    bip: int = 0
+    singles: int = 0
+    doubles: int = 0
+    triples: int = 0
+
+    def get_hits_data(self, hits: int) -> Tuple[float, float, float]:
+        singles = self.singles / (self.singles + self.doubles + self.triples) * hits
+        doubles = self.doubles / (self.singles + self.doubles + self.triples) * hits
+        triples = self.triples / (self.singles + self.doubles + self.triples) * hits
+
+        return [ singles, doubles, triples ]
 
     def get_gb_rate(self, player: BaseCardPlayer) -> float:
         world_gb_rate = float(self.world_gb_rate[player.gb_type].gbs) / (self.world_gb_rate[player.gb_type].gbs + self.world_gb_rate[player.gb_type].fbs)
@@ -78,4 +89,9 @@ class PitcherStats:
         self.world_gb_rate[gb_tendency].fbs += player.stats_pitcher.all.pitcher_flyballs
         self.world_hbp_rate.hbp += player.stats_pitcher.all.pitcher_hit_by_pitch
         self.world_hbp_rate.bf += player.stats_pitcher.all.pitcher_bf
+
+        self.bip += player.stats_pitcher.all.pitcher_ab - player.stats_pitcher.all.pitcher_homeruns - player.stats_pitcher.all.pitcher_strikeouts
+        self.singles += player.stats_pitcher.all.pitcher_singles
+        self.doubles += player.stats_pitcher.all.pitcher_doubles
+        self.triples += player.stats_pitcher.all.pitcher_triples
         

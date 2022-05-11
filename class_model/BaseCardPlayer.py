@@ -1,11 +1,21 @@
 from dataclasses import dataclass
-from wsgiref import headers
+
+def __search_with_no_error__(headers, index_name):
+    try:
+        return headers.index(index_name)
+    except ValueError:
+        return -1
 
 def __search_with_reasonable_error__(headers, index_name):
     try:
         return headers.index(index_name)
     except ValueError:
         raise Exception(index_name + " not included in headers: " + str(headers))
+
+def __parse_velocity__(velo: str) -> int:
+    if velo == "-":
+        return 70
+    return int(velo[0:2])
 
 def headers_to_header_indices(headers):
     header_indices = {}
@@ -14,6 +24,7 @@ def headers_to_header_indices(headers):
     header_indices["full_title_index"] = __search_with_reasonable_error__(headers, "Card Title")
     header_indices["first_name_index"] = __search_with_reasonable_error__(headers, "FirstName")
     header_indices["last_name_index"] = __search_with_reasonable_error__(headers, "LastName")
+    header_indices["position_index"] = __search_with_reasonable_error__(headers, "Position")
     header_indices["team_index"] = __search_with_reasonable_error__(headers, "Team")
     header_indices["year_index"] = __search_with_reasonable_error__(headers, "Year")
     header_indices["ovr_index"] = __search_with_reasonable_error__(headers, "Card Value")
@@ -47,6 +58,7 @@ def headers_to_header_indices(headers):
     header_indices["mov_vr_index"] = __search_with_reasonable_error__(headers, "Movement vR")
     header_indices["ctl_vr_index"] = __search_with_reasonable_error__(headers, "Control vR")
     header_indices["gb_type_index"] = __search_with_reasonable_error__(headers, "GB")
+    header_indices["velo_index"] = __search_with_reasonable_error__(headers, "Velocity")
     header_indices["stamina_index"] = __search_with_reasonable_error__(headers, "Stamina")
     header_indices["hold_index"] = __search_with_reasonable_error__(headers, "Hold")
     header_indices["speed_index"] = __search_with_reasonable_error__(headers, "Speed")
@@ -83,6 +95,7 @@ def new_base_card_player(header_indices, play_line):
         name=str(play_line[header_indices["first_name_index"]] + " " + play_line[header_indices["last_name_index"]]),
         first_name=str(play_line[header_indices["first_name_index"]]),
         last_name=str(play_line[header_indices["last_name_index"]]),
+        position=int(play_line[header_indices["position_index"]]),
         team=str(play_line[header_indices["team_index"]]),
         year=int(play_line[header_indices["year_index"]]),
         ovr=int(play_line[header_indices["ovr_index"]]),
@@ -116,6 +129,7 @@ def new_base_card_player(header_indices, play_line):
         mov_vr=int(play_line[header_indices["mov_vr_index"]]),
         ctl_vr=int(play_line[header_indices["ctl_vr_index"]]),
         gb_type=int(play_line[header_indices["gb_type_index"]]),
+        velocity=int(__parse_velocity__(play_line[header_indices["velo_index"]])),
         stamina=int(play_line[header_indices["stamina_index"]]),
         hold=int(play_line[header_indices["hold_index"]]),
         speed=int(play_line[header_indices["speed_index"]]),
@@ -153,6 +167,7 @@ class BaseCardPlayer:
     name: str
     first_name: str
     last_name: str
+    position: int
     ovr: int
     bats: str
     throws: str
@@ -184,6 +199,7 @@ class BaseCardPlayer:
     mov_vr: int
     ctl_vr: int
     gb_type: int
+    velocity: int
     stamina: int
     hold: int
     speed: int
