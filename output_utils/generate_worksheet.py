@@ -45,4 +45,6 @@ def generate_worksheet(cards: List[BaseStatsPlayer], worksheet, columns: List[Tu
 
         progress_bar.increment("Hiding " + sheet_name + " columns")
 
+    worksheet.set_column('B:B', 45)
+
     progress_bar.finish()

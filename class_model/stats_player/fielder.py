@@ -146,7 +146,7 @@ def merge_stats_fielder(a: StatsFielder, b: StatsFielder) -> StatsFielder:
     c.fielding_double_plays = a.fielding_double_plays + b.fielding_double_plays
     c.fielding_pct = __weighted_avg__(a.fielding_pct, ip_to_ip_w_remainder(a.fielding_ip), b.fielding_pct, ip_to_ip_w_remainder(b.fielding_ip))
     c.fielding_rng = __weighted_avg__(a.fielding_rng, ip_to_ip_w_remainder(a.fielding_ip), b.fielding_rng, ip_to_ip_w_remainder(b.fielding_ip))
-    c.fielding_zr = __weighted_avg__(a.fielding_zr, ip_to_ip_w_remainder(a.fielding_ip), b.fielding_zr, ip_to_ip_w_remainder(b.fielding_ip))
+    c.fielding_zr = a.fielding_zr + b.fielding_zr
     c.fielding_eff = __weighted_avg__(a.fielding_eff, ip_to_ip_w_remainder(a.fielding_ip), b.fielding_eff, ip_to_ip_w_remainder(b.fielding_ip))
     c.fielding_stolen_bases_against = a.fielding_stolen_bases_against + b.fielding_stolen_bases_against
     c.fielding_runners_thrown_out = a.fielding_runners_thrown_out + b.fielding_runners_thrown_out
@@ -164,7 +164,7 @@ def merge_stats_fielder(a: StatsFielder, b: StatsFielder) -> StatsFielder:
     c.fielding_remote_balls_in_zone = a.fielding_remote_balls_in_zone + b.fielding_remote_balls_in_zone
     c.fielding_remote_balls_in_zone_fielded = a.fielding_remote_balls_in_zone_fielded + b.fielding_remote_balls_in_zone_fielded
     c.fielding_impossible_balls_in_zone = a.fielding_impossible_balls_in_zone + b.fielding_impossible_balls_in_zone
-    c.fielding_framing_runs = __weighted_avg__(a.fielding_framing_runs, ip_to_ip_w_remainder(a.fielding_ip), b.fielding_framing_runs, ip_to_ip_w_remainder(b.fielding_ip))
-    c.fielding_arm_runs = __weighted_avg__(a.fielding_arm_runs, ip_to_ip_w_remainder(a.fielding_ip), b.fielding_arm_runs, ip_to_ip_w_remainder(b.fielding_ip))
+    c.fielding_framing_runs = a.fielding_framing_runs + b.fielding_framing_runs
+    c.fielding_arm_runs = a.fielding_arm_runs + b.fielding_arm_runs
 
     return c

@@ -142,6 +142,7 @@ def merge_stats_batter(a: StatsBatter, b: StatsBatter) -> StatsBatter:
     c.batter_hit_by_pitch = a.batter_hit_by_pitch + b.batter_hit_by_pitch
     c.batter_sac_hits = a.batter_sac_hits + b.batter_sac_hits
     c.batter_sac_flies = a.batter_sac_flies + b.batter_sac_flies
+    c.batter_strikeouts = a.batter_strikeouts + b.batter_strikeouts
     c.batter_gidp = a.batter_gidp + b.batter_gidp
     c.batter_sac_hits = a.batter_sac_hits + b.batter_sac_hits
     c.batter_woba = __weighted_avg__(a.batter_woba, a.batter_pa, b.batter_woba, b.batter_pa)

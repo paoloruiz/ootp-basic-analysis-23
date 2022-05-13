@@ -7,7 +7,7 @@ from class_model.global_stats.PitcherStats import PitcherStats
 from class_model.stats_player.header_indices import stats_headers_to_header_indices
 
 
-def load_card_players():
+def load_card_players() -> Dict[str, BaseCardPlayer]:
     f = open('data/cards/pt_card_list.csv', 'r')
 
     headers_unparsed = f.readline()

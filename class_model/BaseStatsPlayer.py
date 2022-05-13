@@ -40,6 +40,7 @@ class SingleLineStatsPlayer:
     stats_batter: StatsBatter = None
     stats_pitcher: StatsPitcher = None
     stats_fielder: StatsFielder = None
+    special_mod_bat_gs: int = 0
 
     def get_fielding_position(self) -> int:
         if self.stats_fielder != None:
@@ -142,7 +143,13 @@ def read_in_fielder_info(header_indices: StatsHeaderIndices, play_line: List[str
 
     existing_players[cid_with_id].stats_fielder[position_number] = new_stats_fielder(header_indices=header_indices.fielding_header_indices, position_number=position_number, play_line=play_line)
 
-def single_line_player_from_base_stats_player(player: BaseStatsPlayer, stats_batter: StatsBatter, stats_pitcher: StatsPitcher, stats_fielder: StatsFielder) -> SingleLineStatsPlayer:
+def single_line_player_from_base_stats_player(
+    player: BaseStatsPlayer,
+    stats_batter: StatsBatter,
+    stats_pitcher: StatsPitcher,
+    stats_fielder: StatsFielder,
+    mod_gs: int = 0
+) -> SingleLineStatsPlayer:
     sl = SingleLineStatsPlayer()
     sl.cid = player.cid
     sl.card_player = player.card_player
@@ -150,5 +157,8 @@ def single_line_player_from_base_stats_player(player: BaseStatsPlayer, stats_bat
     sl.stats_batter = stats_batter
     sl.stats_pitcher = stats_pitcher
     sl.stats_fielder = stats_fielder
+
+    if sl.stats_batter != None:
+        sl.special_mod_bat_gs = sl.stats_batter.batter_games_started - mod_gs
 
     return sl 

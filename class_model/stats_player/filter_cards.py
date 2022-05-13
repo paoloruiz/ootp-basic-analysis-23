@@ -4,21 +4,23 @@ from typing import Dict, List
 from class_model.BaseStatsPlayer import BaseStatsPlayer, SingleLineStatsPlayer, single_line_player_from_base_stats_player
 from class_model.stats_player.merge_stats_players import merge_base_stats_players, merge_single_line_players
 
-def __flatten_player_ovr__(player: BaseStatsPlayer) -> List[SingleLineStatsPlayer]:
+def flatten_player_ovr(player: BaseStatsPlayer) -> List[SingleLineStatsPlayer]:
     single_line_players = []
-    single_line_players.append(single_line_player_from_base_stats_player(player=player, stats_batter=player.stats_batter.ovr, stats_pitcher=player.stats_pitcher.all, stats_fielder=None))
+    gs = 0
 
     if player.stats_fielder != None:
         for stats_fielder in player.stats_fielder.values():
-            single_line_players.append(single_line_player_from_base_stats_player(player=player, stats_batter=player.stats_batter.ovr, stats_pitcher=player.stats_pitcher.all, stats_fielder=stats_fielder))
+            single_line_players.append(single_line_player_from_base_stats_player(player=player, stats_batter=player.stats_batter.ovr, stats_pitcher=player.stats_pitcher.all, stats_fielder=stats_fielder, mod_gs=0))
+            gs += stats_fielder.fielding_games_started
+    single_line_players.append(single_line_player_from_base_stats_player(player=player, stats_batter=player.stats_batter.ovr, stats_pitcher=player.stats_pitcher.all, stats_fielder=None, mod_gs=gs))
     
     return single_line_players
 
 def __flatten_player_starter__(player: BaseStatsPlayer) -> SingleLineStatsPlayer:
-    return single_line_player_from_base_stats_player(player=player, stats_batter=None, stats_pitcher=player.stats_pitcher.all, stats_fielder=None)
+    return single_line_player_from_base_stats_player(player=player, stats_batter=None, stats_pitcher=player.stats_pitcher.all, stats_fielder=None, mod_gs=0)
 
 def __flatten_player_reliever__(player: BaseStatsPlayer) -> SingleLineStatsPlayer:
-    return single_line_player_from_base_stats_player(player=player, stats_batter=None, stats_pitcher=player.stats_pitcher.all, stats_fielder=None)
+    return single_line_player_from_base_stats_player(player=player, stats_batter=None, stats_pitcher=player.stats_pitcher.all, stats_fielder=None, mod_gs=0)
 
 
 def __merge_all_players__(stats_players: List[SingleLineStatsPlayer]) -> List[SingleLineStatsPlayer]:
@@ -39,7 +41,7 @@ def filter_cards_for_tourney(stats_players: List[Dict[str, BaseStatsPlayer]], pl
         single_line_players: List[SingleLineStatsPlayer] = []
         for stats_players_league in stats_players:
             for stats_player in stats_players_league.values():
-                single_line_players.extend(__flatten_player_ovr__(stats_player))
+                single_line_players.extend(flatten_player_ovr(stats_player))
         batters_only = list(filter(lambda player: player.stats_batter.batter_pa > 0, single_line_players))
 
         bats_merged = __merge_all_players__(batters_only)

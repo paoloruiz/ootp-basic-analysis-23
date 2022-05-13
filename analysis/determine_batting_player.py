@@ -16,7 +16,15 @@ def __generate_stat_formula__(analysis: Dict[str, RegressionAnalysis]) -> Callab
         if bats == "L":
             handed_analysis = analysis["L"][high_low]
         elif bats == "S":
-            handed_analysis = analysis["S"][high_low]
+            handed_analysis = analysis["S"]
+        
+        if stat <= 25:
+            if handed_analysis.slope < 0:
+                return handed_analysis.slope * stat / 2 + handed_analysis.intercept
+            return handed_analysis.slope * stat * 2 + handed_analysis.intercept
+
+        if stat > 100:
+            return ((handed_analysis.slope * stat + handed_analysis.intercept) + (handed_analysis.slope * 100 + handed_analysis.intercept)) / 2
         
         return handed_analysis.slope * stat + handed_analysis.intercept
 
@@ -132,7 +140,7 @@ def get_batting_player_formulas(players: List[SingleLineStatsPlayer]) -> Batting
     k_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.avk_ovr, 
         get_y_numerator=lambda player: player.stats_batter.batter_strikeouts, 
-        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch,
+        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_intentional_walks - player.stats_batter.batter_walks,
         min_y_denom=min_pa_denom,
         should_use_cooks_distance=True
     )
@@ -142,7 +150,7 @@ def get_batting_player_formulas(players: List[SingleLineStatsPlayer]) -> Batting
     hr_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.pow_ovr, 
         get_y_numerator=lambda player: player.stats_batter.batter_homeruns, 
-        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_strikeouts,
+        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_intentional_walks - player.stats_batter.batter_strikeouts - player.stats_batter.batter_walks,
         min_y_denom=min_pa_denom,
         should_use_cooks_distance=True
     )
@@ -152,7 +160,7 @@ def get_batting_player_formulas(players: List[SingleLineStatsPlayer]) -> Batting
     walks_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.eye_ovr,
         get_y_numerator=lambda player: player.stats_batter.batter_walks - player.stats_batter.batter_intentional_walks, 
-        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_strikeouts,
+        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_intentional_walks,
         min_y_denom=min_pa_denom,
         should_use_cooks_distance=True
     )
@@ -162,7 +170,7 @@ def get_batting_player_formulas(players: List[SingleLineStatsPlayer]) -> Batting
     hits_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.babip_ovr,
         get_y_numerator=lambda player: player.stats_batter.batter_hits - player.stats_batter.batter_homeruns, 
-        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_strikeouts - player.stats_batter.batter_homeruns - player.stats_batter.batter_walks,
+        get_y_denominator=lambda player: player.stats_batter.batter_pa - player.stats_batter.batter_hit_by_pitch - player.stats_batter.batter_intentional_walks - player.stats_batter.batter_strikeouts - player.stats_batter.batter_homeruns - player.stats_batter.batter_walks,
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )
@@ -172,7 +180,7 @@ def get_batting_player_formulas(players: List[SingleLineStatsPlayer]) -> Batting
     xbh_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.gap_ovr,
         get_y_numerator=lambda player: player.stats_batter.batter_doubles + player.stats_batter.batter_triples, 
-        get_y_denominator=lambda player: player.stats_batter.batter_hits - player.stats_batter.batter_homeruns,
+        get_y_denominator=lambda player: player.stats_batter.batter_singles + player.stats_batter.batter_doubles + player.stats_batter.batter_triples,
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )
@@ -182,7 +190,7 @@ def get_batting_player_formulas(players: List[SingleLineStatsPlayer]) -> Batting
     triple_rate_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.speed,
         get_y_numerator=lambda player: player.stats_batter.batter_doubles + player.stats_batter.batter_triples, 
-        get_y_denominator=lambda player: player.stats_batter.batter_hits - player.stats_batter.batter_homeruns,
+        get_y_denominator=lambda player: player.stats_batter.batter_singles + player.stats_batter.batter_doubles + player.stats_batter.batter_triples,
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )

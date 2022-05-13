@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from analysis.determine_batting_player import get_batting_player_formulas
 from analysis.determine_linear_weights import get_woba_constants
 from analysis.determine_pitching_player import get_pitching_player_formulas
@@ -8,14 +8,17 @@ from class_model.BaseStatsPlayer import BaseStatsPlayer
 from class_model.ProjectedPitcher import generate_projected_pitchers
 from class_model.global_stats.AllLeagueStats import AllLeagueStats
 from class_model.global_stats.PitcherStats import PitcherStats
+from class_model.league_stats.league_stats import IndividualLeagueStats
+from class_model.stats_player.batting_stats import get_batter_stats_for_players
 from class_model.stats_player.filter_cards import filter_cards_for_tourney
+from class_model.stats_player.pitching_stats import get_pitcher_stats_for_players
 from output_utils.generate_tourney_selections_sheet import generate_tourney_proj_batter_selections, generate_tourney_selections
 from output_utils.generate_worksheet import generate_worksheet
 from output_utils.progress.progress_bar import ProgressBar
 from output_utils.headers.tourney_stats_header import get_batter_headers, batter_hidden_cols, get_sp_headers, get_rp_headers, proj_batter_headers, proj_batter_hidden_cols, proj_pitcher_headers
-from class_model.load_players import load_card_players, load_stats_players
+from class_model.load_players import load_card_players
+from util.load_tourney_stats_players import load_tourney_stats_players_flat
 import xlsxwriter
-import os
 
 projections_tourney_types = {
     "openiron": lambda player: player.ovr < 60,
@@ -24,25 +27,11 @@ projections_tourney_types = {
 
 all_league_stats = AllLeagueStats()
 all_pitcher_stats = PitcherStats()
+individual_league_stats = IndividualLeagueStats()
 
 base_card_players = load_card_players()
 
-tourney_files = os.listdir('data/tournament/')
-
-tourney_types: Dict[str, List[Dict[str, BaseStatsPlayer]]] = {}
-
-progress_bar = ProgressBar(len(tourney_files), "Reading tourney files")
-for tourney in tourney_files:
-    tourney_type = tourney.split('_')[0][1:]
-
-    if tourney_type not in tourney_types:
-        tourney_types[tourney_type] = []
-
-    stats_players = load_stats_players('data/tournament/' + tourney, tourney_type, base_card_players, all_league_stats, all_pitcher_stats)
-
-    tourney_types[tourney_type].append(stats_players)
-    progress_bar.increment()
-progress_bar.finish()
+tourney_types: Dict[str, List[Dict[str, BaseStatsPlayer]]] = load_tourney_stats_players_flat(base_card_players, all_league_stats, all_pitcher_stats, individual_leage_stats=individual_league_stats)
 
 for tourney_type in tourney_types.keys():
     sheet_pbar = ProgressBar(1, "Creating " + tourney_type + " sheet")
@@ -68,9 +57,6 @@ for tourney_type in tourney_types.keys():
     )
 
     woba_constants = get_woba_constants(batter_players, all_league_stats.league_stats[tourney_type])
-    batting_player_formulas = get_batting_player_formulas(batter_players)
-    sp_player_formulas = get_pitching_player_formulas(sp_players, all_pitcher_stats)
-    rp_player_formulas = get_pitching_player_formulas(rp_players, all_pitcher_stats)
 
     batter_war_func = get_batter_war_func(woba_constants, all_league_stats.league_stats[tourney_type])
     sp_war_func = get_pitcher_war_func(woba_constants, all_pitcher_stats, 500)
@@ -92,24 +78,52 @@ for tourney_type in tourney_types.keys():
         proj_sp_sheet = workbook.add_worksheet("proj-SP")
         proj_rp_sheet = workbook.add_worksheet("proj-RP")
         bat_selections_sheet = workbook.add_worksheet("proj-bat-selections")
+        
+        batting_player_formulas = get_batting_player_formulas(batter_players)
+        sp_player_formulas = get_pitching_player_formulas(sp_players, all_pitcher_stats)
+        rp_player_formulas = get_pitching_player_formulas(rp_players, all_pitcher_stats)
 
         possible_players = list(filter(filter_fn, base_card_players.values()))
         possible_batters = list(filter(lambda player: player.position != 1 or player.con_ovr > 35, possible_players))
 
-        projected_batters = generate_projected_batters(possible_players, woba_constants, batting_player_formulas)
-        projected_batters.sort(key=lambda pd: pd.war, reverse=True)
+        batter_stats_for_projection: Dict[str, any] = get_batter_stats_for_players(batter_players)
+        sp_stats_for_projection: Dict[str, any] = get_pitcher_stats_for_players(sp_players)
+        rp_stats_for_projection: Dict[str, any] = get_pitcher_stats_for_players(rp_players)
+
+        projected_batters = generate_projected_batters(
+            players=possible_players,
+            linear_weights_formulas=woba_constants,
+            batting_player_formulas=batting_player_formulas,
+            batter_stats_for_players=batter_stats_for_projection,
+            platoon_splits=individual_league_stats.get_platoon_splits(tourney_type),
+            league_stats=all_league_stats.league_stats[tourney_type]
+        )
+        projected_batters.sort(key=lambda pd: pd.tpbs.ovr.war, reverse=True)
         generate_worksheet(projected_batters, proj_batter_sheet, proj_batter_headers, "con", proj_batter_hidden_cols, "projected batters")
 
         generate_tourney_proj_batter_selections(bat_selections_sheet, projected_batters, "projected batter selections")
 
-        possible_starters = list(filter(lambda player: player.position == 1 and player.stamina > 40, possible_players))
-        projected_sp = generate_projected_pitchers(possible_starters, woba_constants, all_pitcher_stats, sp_player_formulas)
+        possible_pitchers = list(filter(lambda player: player.defensep > 10, possible_players))
+        projected_sp = generate_projected_pitchers(
+            players=possible_pitchers,
+            linear_weights_formulas=woba_constants,
+            pitcher_stats=all_pitcher_stats,
+            projected_pitching_formulas=sp_player_formulas,
+            pitcher_stats_for_players=sp_stats_for_projection,
+            platoon_splits=individual_league_stats.get_platoon_splits(tourney_type)
+        )
         projected_sp.sort(key=lambda pd: pd.war_against)
         generate_worksheet(projected_sp, proj_sp_sheet, proj_pitcher_headers, "stu", [], "projected sp")
 
-        possible_relievers = list(filter(lambda player: player.defensep > 10, possible_players))
-        projected_rp = generate_projected_pitchers(possible_relievers, woba_constants, all_pitcher_stats, sp_player_formulas)
-        projected_rp.sort(key=lambda pd: pd.war_against)
+        projected_rp = generate_projected_pitchers(
+            players=possible_pitchers,
+            linear_weights_formulas=woba_constants,
+            pitcher_stats=all_pitcher_stats,
+            projected_pitching_formulas=rp_player_formulas,
+            pitcher_stats_for_players=rp_stats_for_projection,
+            platoon_splits=individual_league_stats.get_platoon_splits(tourney_type)
+        )
+        projected_rp.sort(key=lambda pd: pd.only_pit_war_against)
         generate_worksheet(projected_rp, proj_rp_sheet, proj_pitcher_headers, "stu", [], "projected rp")
 
     close_pbar = ProgressBar(1, "Closing analysis sheet file")

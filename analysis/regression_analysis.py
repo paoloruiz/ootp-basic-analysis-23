@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple
 
-from numpy import r_
 import statsmodels.api as sm
+from sklearn.ensemble import RandomForestRegressor
+import matplotlib.pyplot as plt
+import numpy as np
 
 from class_model.BaseStatsPlayer import SingleLineStatsPlayer
 
@@ -49,6 +51,20 @@ def __get_x_and_y__(
             y.append(y_info[0] / y_info[1])
     return (X, y)
 
+def perform_bats_handedness_no_hl_regression(
+    players: List[SingleLineStatsPlayer],
+    ram: RegressionAnalysisModel
+) -> Dict[str, RegressionAnalysis]:
+    right_hitters = list(filter(lambda x: x.card_player.bats == "R", players))
+    left_hitters = list(filter(lambda x: x.card_player.bats == "L", players))
+    switch_hitters = list(filter(lambda x: x.card_player.bats == "S", players))
+    
+    return {
+        "R": perform_regression(right_hitters, ram),
+        "L": perform_regression(left_hitters, ram),
+        "S": perform_regression(switch_hitters, ram)
+    }
+
 def perform_bats_handedness_regression(
     players: List[SingleLineStatsPlayer],
     ram: RegressionAnalysisModel
@@ -60,7 +76,20 @@ def perform_bats_handedness_regression(
     return {
         "R": perform_high_low_regression(right_hitters, ram),
         "L": perform_high_low_regression(left_hitters, ram),
-        "S": perform_high_low_regression(switch_hitters, ram)
+        # Just not enough switch hitters to split along high/low
+        "S": perform_regression(switch_hitters, ram)
+    }
+
+def perform_throws_handedness_no_hl_regression(
+    players: List[SingleLineStatsPlayer],
+    ram: RegressionAnalysisModel
+) -> Dict[str, RegressionAnalysis]:
+    right_throwers = list(filter(lambda x: x.card_player.throws == "R", players))
+    left_throwers = list(filter(lambda x: x.card_player.throws == "L", players))
+    
+    return {
+        "R": perform_regression(right_throwers, ram),
+        "L": perform_regression(left_throwers, ram)
     }
 
 def perform_throws_handedness_regression(
@@ -93,7 +122,18 @@ def perform_regression(
 ) -> RegressionAnalysis:
     x, y = __get_x_and_y__(players, ram)
 
+    shouldPlot = False
+    for player in players:
+        if player.cid == "40055" and ram.get_x(player) == 94:
+            shouldPlot = True
+
     results = sm.OLS(y, sm.add_constant(x)).fit()
+
+    if shouldPlot and False:
+        plt.scatter(x, y)
+        z = np.linspace(0, 110, num=110)
+        plt.plot(z, results.params[1] * z + results.params[0])
+        plt.show()
     
     if ram.should_use_cooks_distance and len(x) > 2:
         x_2 = []

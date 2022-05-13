@@ -96,6 +96,7 @@ def merge_single_line_players(a: SingleLineStatsPlayer, b: SingleLineStatsPlayer
     c.stats_batter = merge_stats_batter(a.stats_batter, b.stats_batter)
 
     c.stats_pitcher = merge_stats_pitchers(a.stats_pitcher, b.stats_pitcher)
+    c.special_mod_bat_gs = a.special_mod_bat_gs + b.special_mod_bat_gs
 
     if a.stats_fielder != None and b.stats_fielder != None:
         c.stats_fielder = merge_stats_fielder(a.stats_fielder, b.stats_fielder)

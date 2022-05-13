@@ -1,4 +1,5 @@
-from typing import List
+from turtle import width
+from typing import Callable, List
 from class_model.BaseProjectedBatter import BaseProjectedBatter
 from output_utils.progress.progress_bar import ProgressBar
 
@@ -8,66 +9,46 @@ def generate_tourney_selections(worksheet, sheet_name: str):
     progress_bar = ProgressBar(1, "Writing " + sheet_name + " sheet")
 
     worksheet.write(0, 0, "MIN_PA")
-    worksheet.write(0, 1, 1)
+    worksheet.write(0, 1, 1000)
     worksheet.write(0, 2, "MIN_BF")
-    worksheet.write(0, 3, 1)
+    worksheet.write(0, 3, 1000)
+
+    worksheet.set_column('B:B', 45)
+    worksheet.set_column('F:F', 45)
+    worksheet.set_column('J:J', 45)
 
     progress_bar.finish()
 
-def __write_projections__(worksheet, x, y, players: List[BaseProjectedBatter]):
+def __write_projections__(worksheet, x, y, players: List[BaseProjectedBatter], war_fun: Callable[[BaseProjectedBatter], float]):
     for i in range(len(players)):
         worksheet.write(x + i, y, players[i].card_player.full_title)
-        worksheet.write(x + i, y + 1, players[i].war)
+        worksheet.write(x + i, y + 1, war_fun(players[i]))
+
+positions = [("C", 2), ("1B", 3), ("2B", 4), ("3B", 5), ("SS", 6), ("LF", 7), ("CF", 8), ("RF", 9), ("DH", 0)]
 
 def generate_tourney_proj_batter_selections(worksheet, projected_batters: List[BaseProjectedBatter], sheet_name: str):
+    good_batters = list(filter(lambda player: player.card_player.avk_ovr > 25, projected_batters))
     progress_bar = ProgressBar(1, "Writing " + sheet_name + " sheet")
 
-    filtered_batters = list(filter(lambda batter: batter.card_player.avk_ovr > 25, projected_batters))
+    for i in range(len(positions)):
+        pos, pos_num = positions[i]
+        worksheet.write(i * 7, 0, pos)
+        worksheet.write(i * 7, 1, pos + "_WAR")
+        players = list(filter(lambda batter: batter.position == pos_num, good_batters))[0:5]
+        __write_projections__(worksheet, i * 7 + 1, 0, players, war_fun=lambda player: player.tpbs.ovr.war)
 
-    worksheet.write(0, 0, "C")
-    worksheet.write(0, 1, "C_WAR")
-    players = list(filter(lambda batter: batter.position == 2, filtered_batters))[0:5]
-    __write_projections__(worksheet, 1, 0, players)
+        worksheet.write(i * 7, 3, pos + " vL")
+        worksheet.write(i * 7, 4, pos + "_vL_WAR")
+        players = list(filter(lambda batter: batter.position == pos_num, sorted(good_batters, key=lambda player: player.tpbs.vl.war, reverse=True)))[0:5]
+        __write_projections__(worksheet, i * 7 + 1, 3, players, war_fun=lambda player: player.tpbs.vl.war)
 
-    worksheet.write(0, 3, "1B")
-    worksheet.write(0, 4, "1B_WAR")
-    players = list(filter(lambda batter: batter.position == 3, filtered_batters))[0:5]
-    __write_projections__(worksheet, 1, 3, players)
+        worksheet.write(i * 7, 6, pos + " vR")
+        worksheet.write(i * 7, 7, pos + "_vR_WAR")
+        players = list(filter(lambda batter: batter.position == pos_num, sorted(good_batters, key=lambda player: player.tpbs.vr.war, reverse=True)))[0:5]
+        __write_projections__(worksheet, i * 7 + 1, 6, players, war_fun=lambda player: player.tpbs.vr.war)
 
-    worksheet.write(0, 6, "2B")
-    worksheet.write(0, 7, "2B_WAR")
-    players = list(filter(lambda batter: batter.position == 4, filtered_batters))[0:5]
-    __write_projections__(worksheet, 1, 6, players)
-
-    worksheet.write(0, 9, "3B")
-    worksheet.write(0, 10, "3B_WAR")
-    players = list(filter(lambda batter: batter.position == 5, filtered_batters))[0:5]
-    __write_projections__(worksheet, 1, 9, players)
-
-    worksheet.write(0, 12, "SS")
-    worksheet.write(0, 13, "SS_WAR")
-    players = list(filter(lambda batter: batter.position == 6, filtered_batters))[0:5]
-    __write_projections__(worksheet, 1, 12, players)
-
-    worksheet.write(7, 0, "LF")
-    worksheet.write(7, 1, "LF_WAR")
-    players = list(filter(lambda batter: batter.position == 7, filtered_batters))[0:5]
-    __write_projections__(worksheet, 8, 0, players)
-
-    worksheet.write(7, 3, "CF")
-    worksheet.write(7, 4, "CF_WAR")
-    players = list(filter(lambda batter: batter.position == 8, filtered_batters))[0:5]
-    __write_projections__(worksheet, 8, 3, players)
-
-    worksheet.write(7, 6, "RF")
-    worksheet.write(7, 7, "RF_WAR")
-    players = list(filter(lambda batter: batter.position == 9, filtered_batters))[0:5]
-    __write_projections__(worksheet, 8, 6, players)
-
-    worksheet.write(7, 9, "DH")
-    worksheet.write(7, 10, "DH_WAR")
-    players = list(filter(lambda batter: batter.position == 0, filtered_batters))[0:5]
-    __write_projections__(worksheet, 8, 9, players)
-
+    worksheet.set_column('A:A', 45)
+    worksheet.set_column('D:D', 45)
+    worksheet.set_column('G:G', 45)
 
     progress_bar.finish()
