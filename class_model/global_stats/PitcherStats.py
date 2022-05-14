@@ -70,6 +70,8 @@ class PitcherStats:
     def capture_player_data(self, player: BaseStatsPlayer):
         if player.stats_pitcher.all == None:
             return
+        if player.card_player.defensep < 10:
+            return
         cid = player.cid
         
         if cid not in self.gb_rate:

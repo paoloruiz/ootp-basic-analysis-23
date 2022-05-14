@@ -33,7 +33,7 @@ def get_pitcher_war_func(woba_constants: LinearWeightsFormulas, pitcher_stats: P
         gidp = player.stats_pitcher.pitcher_double_plays / bf * num_bf
 
         wraa = woba_constants.woba_to_wraa_per_pa(woba_constants.woba_mult_by_pa_from_hits(walks_against, hbp_against, singles_against, doubles_against, triples_against, homeruns_against) / num_bf) * num_bf
-        wsb = woba_constants.wsb_from_steal_stats(stolen_bases_against, caught_stealing_against)
+        wsb = woba_constants.wsb_from_steal_stats(stolen_bases_against, caught_stealing_against, singles_against, walks_against, hbp_against)
         gidp_val = woba_constants.run_value_bases_out * gidp
 
         return (wraa + wsb + gidp_val) / woba_constants.runs_per_win

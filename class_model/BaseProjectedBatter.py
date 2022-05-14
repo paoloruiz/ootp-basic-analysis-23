@@ -122,7 +122,7 @@ def __get_proj_batter__(
     woba = linear_weights_formulas.woba_mult_by_pa_from_hits(walks, 2, singles, doubles, triples, homeruns) / pa
     wraa = linear_weights_formulas.woba_to_wraa_per_pa(woba) * pa
 
-    wsb = linear_weights_formulas.wsb_from_steal_stats(successful_steals, caught_stealing)
+    wsb = linear_weights_formulas.wsb_from_steal_stats(successful_steals, caught_stealing, singles, walks, 2)
     ubr = __get_weighted_stat__(__get_closest_stats__(batter_stats_for_players["ubr"], player.baserunning), linear_weights_formulas.ubr_per_chance_from_baserunning(player.baserunning)) * non_hr_hits
 
     return ProjBatterStats(

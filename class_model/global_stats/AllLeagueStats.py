@@ -21,6 +21,9 @@ class LeagueStats:
     def get_runs_per_win(self) -> float:
         return 9 * (self.tot_runs_scored / ip_to_ip_w_remainder(self.tot_ip)) * 1.5 + 3
 
+    def get_runs_per_out(self) -> float:
+        return self.tot_runs_scored / (3 * ip_to_ip_w_remainder(self.tot_ip))
+
     def get_replacement_level_runs_per_pa(self) -> float:
         rpw_per_bf = self.get_runs_per_win() / self.total_bf
         adj_games = round(self.tot_ip / 9.0)
@@ -50,7 +53,7 @@ class LeagueStats:
             else:
                 self.total_switch_handed_batter_pa += player.stats_batter.ovr.batter_pa
 
-        if player.stats_pitcher.all == None:
+        if player.stats_pitcher.all == None or player.card_player.defensep < 10:
             return
 
         self.tot_runs_scored += player.stats_pitcher.all.pitcher_runs_against

@@ -119,7 +119,7 @@ def __convert_stat_player__(
     woba = linear_weights_formulas.woba_mult_by_pa_from_hits(walks, hbp, singles, doubles, triples, homeruns) / bf
     wraa = linear_weights_formulas.woba_to_wraa_per_pa(woba) * bf
 
-    wsb = linear_weights_formulas.wsb_from_steal_stats(successful_steals, caught_stealing)
+    wsb = linear_weights_formulas.wsb_from_steal_stats(successful_steals, caught_stealing, singles, walks, hbp)
 
     gidp = __get_weighted_stat__(__get_closest_stats__(pitcher_stats_for_players["gidp"], player.gb_type), projected_pitching_formulas.get_gidp_per_bip(player.gb_type)) * bip
     gidp_val = gidp * linear_weights_formulas.run_value_bases_out

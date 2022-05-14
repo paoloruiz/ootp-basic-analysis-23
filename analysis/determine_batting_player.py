@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Callable, List, Dict
 from analysis.regression_analysis import RegressionAnalysisModel, RegressionAnalysis, perform_bats_handedness_regression, perform_multi_regression, perform_regression
 
-from class_model.BaseStatsPlayer import BaseStatsPlayer, SingleLineStatsPlayer
+from class_model.BaseStatsPlayer import SingleLineStatsPlayer
 from util.ip_math import ip_to_ip_w_remainder
 
 min_pa_denom = 50

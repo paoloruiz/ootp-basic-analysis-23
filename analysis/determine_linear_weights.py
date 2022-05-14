@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Callable, List
-from analysis.regression_analysis import RegressionAnalysisModel, perform_multi_regression, perform_regression
+from analysis.regression_analysis import RegressionAnalysisModel, perform_regression
+from analysis.tango_woba import get_tango_woba_factors
 
 from class_model.BaseStatsPlayer import BaseStatsPlayer, SingleLineStatsPlayer
 from class_model.global_stats.AllLeagueStats import LeagueStats
-from util.ip_math import add_ip, ip_to_ip_w_remainder
 
 
 batting_positions = [0, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -36,8 +36,8 @@ class LinearWeightsFormulas:
     woba_to_wraa_per_pa: Callable[[float], float]
     # give [walks, hit by pitch, singles, doubles, triples, homeruns] get woba * pa
     woba_mult_by_pa_from_hits: Callable[[float, float, float, float, float, float], float]
-    # give [stolen bases, caught stealing] get wSB
-    wsb_from_steal_stats: Callable[[float, float], float]
+    # give [stolen bases, caught stealing, singles, walks, hit by pitch] get wSB
+    wsb_from_steal_stats: Callable[[float, float, float, float, float], float]
     # give [baserunning rating] get ubr / (hits - homeruns)
     ubr_per_chance_from_baserunning: Callable[[int], float]
     runs_per_win: float
@@ -47,40 +47,7 @@ def get_woba_constants(
     players: List[SingleLineStatsPlayer],
     league_stats: LeagueStats
 ) -> LinearWeightsFormulas:
-    eligible_batters = list(filter(lambda player: player.get_fielding_position() == 0 and player.stats_batter != None and player.stats_batter.batter_pa > 20, players))
-    wraa_ram = RegressionAnalysisModel(
-        get_x=lambda player: player.stats_batter.batter_woba, 
-        get_y_numerator=lambda player: player.stats_batter.batter_wraa, 
-        get_y_denominator=lambda player: player.stats_batter.batter_pa,
-        min_y_denom=10,
-        should_use_cooks_distance=True
-    )
-    woba_to_wraa_analysis = perform_regression(eligible_batters, wraa_ram)
-
-
-    X = []
-    y = []
-    for player in eligible_batters:
-        X.append([ 
-            player.stats_batter.batter_walks - player.stats_batter.batter_intentional_walks, 
-            player.stats_batter.batter_hit_by_pitch, 
-            player.stats_batter.batter_singles, 
-            player.stats_batter.batter_doubles, 
-            player.stats_batter.batter_triples, 
-            player.stats_batter.batter_homeruns 
-        ])
-        y.append(player.stats_batter.batter_woba * (player.stats_batter.batter_ab + player.stats_batter.batter_walks - player.stats_batter.batter_intentional_walks + 
-            player.stats_batter.batter_sac_flies + player.stats_batter.batter_hit_by_pitch))
-    woba_weights_analysis = perform_multi_regression(X, y)
-
-
-    X = []
-    y = []
-    for player in eligible_batters:
-        X.append([ player.stats_batter.batter_stolen_bases, player.stats_batter.batter_caught_stealing ])
-        y.append(player.stats_batter.batter_weighted_stolen_bases)
-    wsb_analysis = perform_multi_regression(X, y)
-
+    woba_weights = get_tango_woba_factors(players, league_stats=league_stats)
     
     ubr_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.baserunning, 
@@ -94,11 +61,11 @@ def get_woba_constants(
     runs_per_win = league_stats.get_runs_per_win()
 
     return LinearWeightsFormulas(
-        woba_to_wraa_per_pa=lambda woba: woba_to_wraa_analysis.slope * woba + woba_to_wraa_analysis.intercept,
-        woba_mult_by_pa_from_hits=lambda walks, hbp, singles, doubles, triples, homeruns: walks * woba_weights_analysis.slope[0] + hbp * woba_weights_analysis.slope[1] + 
-            singles * woba_weights_analysis.slope[2] + doubles * woba_weights_analysis.slope[3] + triples * woba_weights_analysis.slope[4] + homeruns * woba_weights_analysis.slope[5] + woba_weights_analysis.intercept,
-        wsb_from_steal_stats=lambda stolen_bases, caught_stealing: stolen_bases * wsb_analysis.slope[0] + caught_stealing * wsb_analysis.slope[1] + wsb_analysis.intercept,
+        woba_to_wraa_per_pa=lambda woba: (woba - woba_weights.woba_avg) / woba_weights.woba_scale,
+        woba_mult_by_pa_from_hits=lambda walks, hbp, singles, doubles, triples, homeruns: walks * woba_weights.woba_bb + hbp * woba_weights.woba_hb + singles * woba_weights.woba_1b + 
+            doubles * woba_weights.woba_1b + triples * woba_weights.woba_3b + homeruns * woba_weights.woba_hr,
+        wsb_from_steal_stats=lambda stolen_bases, caught_stealing, singles, bb_no_ib, hb: stolen_bases * woba_weights.woba_sb + caught_stealing * woba_weights.woba_cs - (woba_weights.lg_wsb * (singles + bb_no_ib + hb)),
         ubr_per_chance_from_baserunning=lambda baserunning: baserunning * ubr_analysis.slope + ubr_analysis.intercept,
         runs_per_win=runs_per_win,
-        run_value_bases_out=wsb_analysis.slope[1]
+        run_value_bases_out=woba_weights.woba_cs
     )
