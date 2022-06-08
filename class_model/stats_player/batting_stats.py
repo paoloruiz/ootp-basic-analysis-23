@@ -102,6 +102,16 @@ batting_stats_formula_getters: Dict[str, BatterStats] = {
         get_stat_affected=lambda player: player.stats_fielder.fielding_zr,
         get_stat_pa_affected=lambda player: player.stats_fielder.fielding_ip
     ),
+    "sba_against": BatterStats(
+        get_rating_formula=lambda player: player.card_player.carm,
+        get_stat_affected=lambda player: player.stats_fielder.fielding_stolen_bases_against + player.stats_fielder.fielding_runners_thrown_out if player.stats_fielder.fielding_position == 2 else 0,
+        get_stat_pa_affected=lambda player: player.stats_fielder.fielding_ip
+    ),
+    "cs_against": BatterStats(
+        get_rating_formula=lambda player: player.card_player.carm,
+        get_stat_affected=lambda player: player.stats_fielder.fielding_runners_thrown_out if player.stats_fielder.fielding_position == 2 else 0,
+        get_stat_pa_affected=lambda player: player.stats_fielder.fielding_stolen_bases_against + player.stats_fielder.fielding_runners_thrown_out
+    ),
 }
 
 def __fill_stat__(bs: BatterStats, player: SingleLineStatsPlayer, d: Dict[int, Tuple[int, int]], is_ip: bool):
@@ -138,5 +148,7 @@ def get_batter_stats_for_players(players: List[SingleLineStatsPlayer]) -> Dict[s
             __fill_stat__(batting_stats_formula_getters["arm_runs"], player, stats_for_players["arm_runs"], True)
             __fill_stat__(batting_stats_formula_getters["zr"], player, stats_for_players["zr"], True)
             __fill_stat__(batting_stats_formula_getters["frame_runs"], player, stats_for_players["frame_runs"], True)
+            __fill_stat__(batting_stats_formula_getters["sba_against"], player, stats_for_players["sba_against"], True)
+            __fill_stat__(batting_stats_formula_getters["cs_against"], player, stats_for_players["cs_against"], True)
     
     return stats_for_players

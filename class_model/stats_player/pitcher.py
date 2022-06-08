@@ -8,6 +8,8 @@ from util.ip_math import add_ip, ip_to_ip_w_remainder
 class StatsPitcher:
     pitcher_games: int = 0
     pitcher_games_start: int = 0
+    pitcher_wins: int = 0
+    pitcher_losses: int = 0
     pitcher_ip: float = 0.0
     pitcher_bf: int = 0
     pitcher_ab: int = 0
@@ -71,6 +73,8 @@ def get_pitcher_header_indices(headers: List[str]) -> Dict[str, int]:
 
     header_indices["pit_games_index"] = __search_with_reasonable_error__(headers, "G", pitcher_starting_index)
     header_indices["pit_games_started_index"] = __search_with_reasonable_error__(headers, "GS", pitcher_starting_index)
+    header_indices["pit_wins_index"] = __search_with_no_error__(headers, "W", pitcher_starting_index)
+    header_indices["pit_losses_index"] = __search_with_no_error__(headers, "L", pitcher_starting_index)
     header_indices["pit_ip_index"] = __search_with_reasonable_error__(headers, "IP", pitcher_starting_index)
     header_indices["pit_bf_index"] = __search_with_reasonable_error__(headers, "BF", pitcher_starting_index)
     header_indices["pit_ab_index"] = __search_with_reasonable_error__(headers, "AB", pitcher_starting_index)
@@ -110,6 +114,8 @@ def new_stats_pitcher(header_indices: Dict[str, int], play_line: List[str]) -> S
     return StatsPitcher(
         pitcher_games=__safe_int__(play_line[header_indices["pit_games_index"]]),
         pitcher_games_start=__safe_int__(play_line[header_indices["pit_games_started_index"]]),
+        pitcher_wins=__safe_int__(play_line[header_indices["pit_wins_index"]]) if header_indices["pit_wins_index"] else 0,
+        pitcher_losses=__safe_int__(play_line[header_indices["pit_losses_index"]]) if header_indices["pit_losses_index"] else 0,
         pitcher_ip=__safe_float__(play_line[header_indices["pit_ip_index"]]),
         pitcher_bf=__safe_int__(play_line[header_indices["pit_bf_index"]]),
         pitcher_ab=__safe_int__(play_line[header_indices["pit_ab_index"]]),
@@ -153,6 +159,8 @@ def merge_stats_pitchers(a: StatsPitcher, b: StatsPitcher) -> StatsPitcher:
 
     c.pitcher_games = a.pitcher_games + b.pitcher_games
     c.pitcher_games_start = a.pitcher_games_start + b.pitcher_games_start
+    c.pitcher_wins = a.pitcher_wins + b.pitcher_wins
+    c.pitcher_losses = a.pitcher_losses + b.pitcher_losses
     c.pitcher_ip = add_ip(a.pitcher_ip, b.pitcher_ip)
     c.pitcher_bf = a.pitcher_bf + b.pitcher_bf
     c.pitcher_ab = a.pitcher_ab + b.pitcher_ab

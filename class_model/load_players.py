@@ -1,7 +1,7 @@
 import os
 from typing import Dict
 from class_model.BaseCardPlayer import BaseCardPlayer, new_base_card_player, headers_to_header_indices
-from class_model.BaseStatsPlayer import BaseStatsPlayer, new_base_stats_player, read_in_fielder_info, read_in_ovr_info, read_in_reliever_info, read_in_starter_info, read_in_vl_info, read_in_vr_info
+from class_model.BaseStatsPlayer import BaseStatsPlayer, new_base_stats_player, read_in_fielder_info, read_in_ovr_info, read_in_vl_info, read_in_vr_info
 from class_model.global_stats.AllLeagueStats import AllLeagueStats
 from class_model.global_stats.PitcherStats import PitcherStats
 from class_model.stats_player.header_indices import stats_headers_to_header_indices
@@ -9,6 +9,23 @@ from class_model.stats_player.header_indices import stats_headers_to_header_indi
 
 def load_card_players() -> Dict[str, BaseCardPlayer]:
     f = open('data/cards/pt_card_list.csv', 'r')
+
+    headers_unparsed = f.readline()
+    headers_split = headers_unparsed.split(',')
+    headers = [(lambda h: h.replace('/', '').strip())(h) for h in headers_split]
+    header_indices = headers_to_header_indices(headers)
+    players = {}
+    for line_unparsed in f.readlines():
+        line_split = line_unparsed.split(',')
+        play_line = [(lambda x: x.strip())(x) for x in line_split]
+        base_card_player = new_base_card_player(header_indices, play_line)
+        players[base_card_player.cid] = base_card_player
+    f.close()
+
+    return players
+
+def load_card_players_file(file: str) -> Dict[str, BaseCardPlayer]:
+    f = open('data/' + file, 'r')
 
     headers_unparsed = f.readline()
     headers_split = headers_unparsed.split(',')
@@ -71,26 +88,6 @@ def load_stats_players(
             line_split = line_unparsed.split(',')
             play_line = [(lambda x: x.strip())(x) for x in line_split]
             read_in_vr_info(header_indices=header_indices, play_line=play_line, existing_players=players)
-        f.close()
-
-    if "starter.csv" in filenames:
-        f = open(directory + "/starter.csv", "r")
-        # read headers line
-        f.readline()
-        for line_unparsed in f.readlines():
-            line_split = line_unparsed.split(',')
-            play_line = [(lambda x: x.strip())(x) for x in line_split]
-            read_in_starter_info(header_indices=header_indices, play_line=play_line, existing_players=players)
-        f.close()
-
-    if "reliever.csv" in filenames:
-        f = open(directory + "/reliever.csv", "r")
-        # read headers line
-        f.readline()
-        for line_unparsed in f.readlines():
-            line_split = line_unparsed.split(',')
-            play_line = [(lambda x: x.strip())(x) for x in line_split]
-            read_in_reliever_info(header_indices=header_indices, play_line=play_line, existing_players=players)
         f.close()
 
     if "def2.csv" in filenames:

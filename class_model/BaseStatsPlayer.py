@@ -17,8 +17,8 @@ class TotalStatsBatter:
 @dataclass
 class TotalStatsPitcher:
     all: StatsPitcher = None
-    starter: StatsPitcher = None
-    reliever: StatsPitcher = None
+    vl: StatsPitcher = None
+    vr: StatsPitcher = None
 
 
 @dataclass
@@ -93,8 +93,8 @@ def new_base_stats_player(header_indices: StatsHeaderIndices, play_line: List[st
         card_player=base_card_players[play_line[header_indices.main_header_indices["cid_index"]]],
         position=str(play_line[header_indices.main_header_indices["pos_index"]]),
         team=str(play_line[header_indices.main_header_indices["tm_index"]]) + "_" + team_short,
-        stats_batter=StatsBatter(),
-        stats_pitcher=StatsPitcher(),
+        stats_batter=TotalStatsBatter(),
+        stats_pitcher=TotalStatsPitcher(),
         stats_fielder={}
     )
 
@@ -106,35 +106,21 @@ def read_in_ovr_info(header_indices: StatsHeaderIndices, play_line: List[str], e
     existing_players[cid_with_id].stats_batter.ovr = new_stats_batter(header_indices=header_indices.batter_header_indices, play_line=play_line)
     existing_players[cid_with_id].stats_pitcher.all = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
 
-# TODO vl and vr should affect pitcher data too
 def read_in_vl_info(header_indices: StatsHeaderIndices, play_line: List[str], existing_players: Dict[str, BaseStatsPlayer]):
     cid_with_id = play_line[header_indices.main_header_indices["cid_index"]] + "_" + play_line[header_indices.main_header_indices["id_index"]]
     if cid_with_id not in existing_players:
         raise Exception("No existing player for cid: " + cid_with_id)
 
-    existing_players[cid_with_id].stats_batter.vl = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
+    existing_players[cid_with_id].stats_batter.vl = new_stats_batter(header_indices=header_indices.batter_header_indices, play_line=play_line)
+    existing_players[cid_with_id].stats_pitcher.vl = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
 
 def read_in_vr_info(header_indices: StatsHeaderIndices, play_line: List[str], existing_players: Dict[str, BaseStatsPlayer]):
     cid_with_id = play_line[header_indices.main_header_indices["cid_index"]] + "_" + play_line[header_indices.main_header_indices["id_index"]]
     if cid_with_id not in existing_players:
         raise Exception("No existing player for cid: " + cid_with_id)
 
-    existing_players[cid_with_id].stats_batter.vr = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
-
-def read_in_starter_info(header_indices: StatsHeaderIndices, play_line: List[str], existing_players: Dict[str, BaseStatsPlayer]):
-
-    cid_with_id = play_line[header_indices.main_header_indices["cid_index"]] + "_" + play_line[header_indices.main_header_indices["id_index"]]
-    if cid_with_id not in existing_players:
-        raise Exception("No existing player for cid: " + cid_with_id)
-
-    existing_players[cid_with_id].stats_pitcher.starter = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
-
-def read_in_reliever_info(header_indices: StatsHeaderIndices, play_line: List[str], existing_players: Dict[str, BaseStatsPlayer]):
-    cid_with_id = play_line[header_indices.main_header_indices["cid_index"]] + "_" + play_line[header_indices.main_header_indices["id_index"]]
-    if cid_with_id not in existing_players:
-        raise Exception("No existing player for cid: " + cid_with_id)
-
-    existing_players[cid_with_id].stats_pitcher.reliever = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
+    existing_players[cid_with_id].stats_batter.vr = new_stats_batter(header_indices=header_indices.batter_header_indices, play_line=play_line)
+    existing_players[cid_with_id].stats_pitcher.vr = new_stats_pitcher(header_indices=header_indices.pitcher_header_indices, play_line=play_line)
 
 def read_in_fielder_info(header_indices: StatsHeaderIndices, play_line: List[str], position_number: int, existing_players: Dict[str, BaseStatsPlayer]):
     cid_with_id = play_line[header_indices.main_header_indices["cid_index"]] + "_" + play_line[header_indices.main_header_indices["id_index"]]

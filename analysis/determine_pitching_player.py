@@ -46,7 +46,7 @@ class PitchingPlayerFormulas:
     get_bf_per_game: Callable[[int], float]
 
 
-def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_stats: PitcherStats) -> PitchingPlayerFormulas:
+def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_stats: PitcherStats, plat_only: bool = False) -> PitchingPlayerFormulas:
     pitchers_only = list(filter(lambda player: player.stats_pitcher.pitcher_bf > 0, players))
     k_ram = RegressionAnalysisModel(
         get_x=lambda player: player.card_player.stu_ovr, 
@@ -93,6 +93,12 @@ def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_s
         if X_data[k][1] > 500:
             X.append(X_control_var[k])
             y.append(X_data[k][0] / X_data[k][1])
+
+    if len(X) <= 2:
+        for k in X_data.keys():
+            if X_data[k][1] > 30:
+                X.append(X_control_var[k])
+                y.append(X_data[k][0] / X_data[k][1])
     babip_analysis = perform_multi_regression(X, y)
 
     sba_ram = RegressionAnalysisModel(
@@ -102,7 +108,7 @@ def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_s
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )
-    sba_analysis = perform_regression(pitchers_only, sba_ram)
+    sba_analysis = perform_regression(pitchers_only, sba_ram) if not plat_only else RegressionAnalysis(slope=0, intercept=0, r_squared=0, len_x=0)
     
 
     steal_ram = RegressionAnalysisModel(
@@ -112,7 +118,7 @@ def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_s
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )
-    steal_analysis = perform_regression(pitchers_only, steal_ram)
+    steal_analysis = perform_regression(pitchers_only, steal_ram) if not plat_only else RegressionAnalysis(slope=0, intercept=0, r_squared=0, len_x=0)
     
 
     gidp_ram = RegressionAnalysisModel(
@@ -122,7 +128,7 @@ def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_s
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )
-    gidp_analysis = perform_regression(pitchers_only, gidp_ram)
+    gidp_analysis = perform_regression(pitchers_only, gidp_ram) if not plat_only else RegressionAnalysis(slope=0, intercept=0, r_squared=0, len_x=0)
 
 
     stam_ram = RegressionAnalysisModel(
@@ -132,7 +138,7 @@ def get_pitching_player_formulas(players: List[SingleLineStatsPlayer], pitcher_s
         min_y_denom=low_min_denom,
         should_use_cooks_distance=True
     )
-    stam_analysis = perform_regression(pitchers_only, stam_ram)
+    stam_analysis = perform_regression(pitchers_only, stam_ram) if not plat_only else RegressionAnalysis(slope=0, intercept=0, r_squared=0, len_x=0)
 
     return PitchingPlayerFormulas(
         get_strikeouts_per_pa=__generate_stat_formula__(k_analysis),

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import math
 from typing import Dict, List, Tuple
 
 from class_model.BaseStatsPlayer import BaseStatsPlayer, SingleLineStatsPlayer
@@ -30,6 +31,7 @@ def __is_platoon__(players: List[SingleLineStatsPlayer], is_catcher: bool) -> Tu
 
 @dataclass
 class Team:
+    name: str
     players: List[BaseStatsPlayer] = field(default_factory=list)
 
     def add_player(self, player: BaseStatsPlayer):
@@ -45,12 +47,17 @@ class Team:
             if player.stats_fielder != None:
                 for pos in player.stats_fielder.keys():
                     fielding_positions.add(pos)
-            if player.stats_batter != None:
-                gs += player.stats_batter.ovr.batter_games_started
             if player.stats_pitcher != None:
                 gs += player.stats_pitcher.all.pitcher_games_start
 
-        return gs % 9 == 0 and gs / 9 >= 12 and len(fielding_positions) == 8
+        return gs > 0 and len(fielding_positions) == 8
+
+    def get_tot_gs(self):
+        gs = 0
+        for player in self.players:
+            if player.stats_pitcher != None:
+                gs += player.stats_pitcher.all.pitcher_games_start
+        return gs
 
     def get_starting_list(self) -> Dict[int, List[SingleLineStatsPlayer]]:
         flattened_players: List[SingleLineStatsPlayer] = []
@@ -87,13 +94,14 @@ class Team:
 @dataclass
 class IndividualLeague:
     num_teams: int
+    name: str
 
     teams: Dict[str, Team] = field(default_factory=dict)
 
     def record_players(self, players: Dict[str, BaseStatsPlayer]):
         for player in players.values():
             if player.team not in self.teams:
-                self.teams[player.team] = Team()
+                self.teams[player.team] = Team(name=player.team)
             
             self.teams[player.team].add_player(player)
 
@@ -106,28 +114,39 @@ class IndividualLeague:
         
         return t
 
+    def get_all_teams(self):
+        t: List[Team] = []
+
+        for team in self.teams.values():
+            t.append(team)
+        
+        return t
+
 positions_to_check = [0, 2, 3, 4, 5, 6, 7, 8, 9]
 
 @dataclass
 class IndividualLeagueStats:
     ils_d: Dict[str, List[IndividualLeague]] = field(default_factory=dict)
 
-    def record(self, tourney_type: str, num_teams: int, players: Dict[str, BaseStatsPlayer]):
+    def record(self, tourney_type: str, num_teams: int, players: Dict[str, BaseStatsPlayer], lg_nm: str = None):
         if tourney_type not in self.ils_d:
             self.ils_d[tourney_type] = []
 
-        new_league = IndividualLeague(num_teams=num_teams)
+        new_league = IndividualLeague(num_teams=num_teams, name=lg_nm)
         new_league.record_players(players=players)
 
         self.ils_d[tourney_type].append(new_league)
 
-    def get_platoon_splits(self, tourney_type: str) -> PlatoonSplits:
+    def get_platoon_splits(self, tourney_type: str, ignore_validity: bool = False) -> PlatoonSplits:
         if tourney_type not in self.ils_d:
             raise Exception(tourney_type + " is not a valid tourney type of: " + ", ".join(self.ils_d.keys()))
         
         platoon_splits = PlatoonSplits()
         for league in self.ils_d[tourney_type]:
-            for team in league.get_valid_teams():
+            valid_teams = league.get_valid_teams() if not ignore_validity else league.get_all_teams()
+            sorted_valid_teams = sorted(valid_teams, key=lambda tm: tm.get_tot_gs(), reverse=True)
+            teams_to_look_at = sorted_valid_teams[0:math.floor(len(sorted_valid_teams) / 4)]
+            for team in teams_to_look_at:
                 player_list = team.get_starting_list()
                 for pos_num in positions_to_check:
                     position_group = sorted(player_list[pos_num], key=lambda player: __get_field_gs__(player), reverse=True)

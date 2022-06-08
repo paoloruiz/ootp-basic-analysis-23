@@ -3,7 +3,7 @@ from analysis.determine_batting_player import get_batting_player_formulas
 from analysis.determine_linear_weights import get_woba_constants
 from analysis.determine_pitching_player import get_pitching_player_formulas
 from analysis.regression_analysis import RegressionAnalysisModel
-from analysis.test_batting_fns import get_batter_bats_hl_formula, get_batter_bats_no_hl_formula, get_batter_formula, get_batter_hl_formula
+from analysis.test_batting_fns import get_batter_bats_hl_formula, get_batter_bats_hl_poly2_formula, get_batter_bats_hl_poly3_formula, get_batter_bats_no_hl_formula, get_batter_bats_reg_formula, get_batter_formula, get_batter_hl_formula
 from class_model.BaseStatsPlayer import BaseStatsPlayer, SingleLineStatsPlayer
 from class_model.global_stats.AllLeagueStats import AllLeagueStats
 from class_model.global_stats.PitcherStats import PitcherStats
@@ -552,6 +552,10 @@ for stat in bat_stat_order_rams.keys():
             stat_fn = lambda player: player.card_player.babip_ovr
         bat_stats_cases[stat][stat_order] = {
             "bats_hl": get_batter_bats_hl_formula(batter_players_analysis, stat_fn, bat_stat_order_rams[stat][stat_order]),
+            "bats_poly2": get_batter_bats_hl_poly2_formula(batter_players_analysis, stat_fn, bat_stat_order_rams[stat][stat_order]),
+            "bats_poly3": get_batter_bats_hl_poly3_formula(batter_players_analysis, stat_fn, bat_stat_order_rams[stat][stat_order]),
+            "bats_reg_elast": get_batter_bats_reg_formula(batter_players_analysis, stat_fn, bat_stat_order_rams[stat][stat_order], "elastic_net"),
+            "bats_reg_lasso": get_batter_bats_reg_formula(batter_players_analysis, stat_fn, bat_stat_order_rams[stat][stat_order], "sqrt_lasso"),
         }
 
         batter_with_pos_to_batter_data[stat][stat_order] = {}
@@ -576,7 +580,11 @@ for stat_order in bat_stat_order_rams["avk"]:
     orders_off_by[stat_order] = 0.0
 
 bat_type_off_by = {
-    "bats_hl": 0.0
+    "bats_hl": 0.0,
+    "bats_poly2": 0.0,
+    "bats_poly3": 0.0,
+    "bats_reg_elast": 0.0,
+    "bats_reg_lasso": 0.0,
 }
 
 def measure_batter_off_by(

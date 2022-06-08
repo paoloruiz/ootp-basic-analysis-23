@@ -3,7 +3,6 @@ from typing import List
 
 from class_model.BaseStatsPlayer import SingleLineStatsPlayer
 from class_model.global_stats.AllLeagueStats import LeagueStats
-from util.ip_math import ip_to_ip_w_remainder
 
 @dataclass
 class WobaWeights:

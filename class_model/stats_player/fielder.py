@@ -20,6 +20,7 @@ class StatsFielder:
     fielding_zr: float = 0.0
     fielding_eff: float = 0.0
     fielding_stolen_bases_against: int = 0
+    fielding_caught_stealing_against: int = 0
     fielding_runners_thrown_out: int = 0
     fielding_ip: float = 0.0
     fielding_passed_balls: int = 0

@@ -6,20 +6,12 @@ import shutil
 directories = os.listdir('import_data')
 for directory in directories:
     filetype = ''
-    if 'Ovr' in directory:
-        filetype = 'overall/'
-    elif 'vL' in directory:
-        filetype = 'vL/'
+    if directory.startswith("league"):
+        filetype = "league/"
     elif directory.startswith('T'):
         filetype = 'tournament/'
-    elif 'Starter' in directory:
-        filetype = 'starter/'
-    elif 'Reliever' in directory:
-        filetype = 'reliever/'
-    else:
-        filetype = 'vR/'
 
-    os.mkdir("data/" + filetype + directory)
+    os.makedirs("data/" + filetype + directory, exist_ok=True)
     filenames = os.listdir("import_data/" + directory)
     for filename in filenames:
         f = open("import_data/" + directory + "/" + filename, 'r')

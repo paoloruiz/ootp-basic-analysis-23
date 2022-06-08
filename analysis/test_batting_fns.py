@@ -1,5 +1,5 @@
 from typing import Callable, List
-from analysis.regression_analysis import RegressionAnalysisModel, perform_bats_handedness_no_hl_regression, perform_bats_handedness_regression, perform_high_low_regression, perform_regression, perform_throws_handedness_no_hl_regression, perform_throws_handedness_regression
+from analysis.regression_analysis import RegressionAnalysisModel, perform_bats_handedness_no_hl_regression, perform_bats_handedness_poly_regression, perform_bats_handedness_reg_regression, perform_bats_handedness_regression, perform_high_low_regression, perform_regression, perform_throws_handedness_no_hl_regression, perform_throws_handedness_regression
 
 from class_model.BaseStatsPlayer import SingleLineStatsPlayer
 
@@ -48,6 +48,8 @@ def get_batter_bats_hl_formula(
         stat = get_stat(player)
         hl = "high" if stat >= 50 else "low"
         bats = player.card_player.bats
+        if bats == "S":
+            return stat * analysis[bats].slope + analysis[bats].intercept
         return stat * analysis[bats][hl].slope + analysis[bats][hl].intercept
 
     return get_player_formula
@@ -82,5 +84,63 @@ def get_pitcher_throws_no_hl_formula(
         if stat > 100:
             return ((stat * analysis[throws].slope + analysis[throws].intercept) + (100 * analysis[throws].slope + analysis[throws].intercept)) / 2
         return stat * analysis[throws].slope + analysis[throws].intercept
+
+    return get_player_formula
+
+
+def get_batter_bats_hl_poly2_formula(
+    players: List[SingleLineStatsPlayer], 
+    get_stat: Callable[[SingleLineStatsPlayer], int],
+    ram: RegressionAnalysisModel
+) -> Callable[[SingleLineStatsPlayer], float]:
+    batting_only = list(filter(lambda player: player.get_fielding_position() == 0, players))
+    analysis = perform_bats_handedness_poly_regression(batting_only, ram, 2)
+
+    def get_player_formula(player: SingleLineStatsPlayer) -> float:
+        stat = get_stat(player)
+        hl = "high" if stat >= 50 else "low"
+        bats = player.card_player.bats
+        if bats == "S":
+            return analysis[bats](stat)
+        return analysis[bats][hl](stat)
+
+    return get_player_formula
+
+
+def get_batter_bats_hl_poly3_formula(
+    players: List[SingleLineStatsPlayer], 
+    get_stat: Callable[[SingleLineStatsPlayer], int],
+    ram: RegressionAnalysisModel
+) -> Callable[[SingleLineStatsPlayer], float]:
+    batting_only = list(filter(lambda player: player.get_fielding_position() == 0, players))
+    analysis = perform_bats_handedness_poly_regression(batting_only, ram, 3)
+
+    def get_player_formula(player: SingleLineStatsPlayer) -> float:
+        stat = get_stat(player)
+        hl = "high" if stat >= 50 else "low"
+        bats = player.card_player.bats
+        if bats == "S":
+            return analysis[bats](stat)
+        return analysis[bats][hl](stat)
+
+    return get_player_formula
+
+
+def get_batter_bats_reg_formula(
+    players: List[SingleLineStatsPlayer], 
+    get_stat: Callable[[SingleLineStatsPlayer], int],
+    ram: RegressionAnalysisModel,
+    reg_type: str,
+) -> Callable[[SingleLineStatsPlayer], float]:
+    batting_only = list(filter(lambda player: player.get_fielding_position() == 0, players))
+    analysis = perform_bats_handedness_reg_regression(batting_only, ram, reg_type)
+
+    def get_player_formula(player: SingleLineStatsPlayer) -> float:
+        stat = get_stat(player)
+        hl = "high" if stat >= 50 else "low"
+        bats = player.card_player.bats
+        if bats == "S":
+            return stat * analysis[bats].slope + analysis[bats].intercept
+        return stat * analysis[bats][hl].slope + analysis[bats][hl].intercept
 
     return get_player_formula

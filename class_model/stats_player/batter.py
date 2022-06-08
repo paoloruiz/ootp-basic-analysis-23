@@ -8,6 +8,7 @@ class StatsBatter:
     batter_games_started: int = 0
     batter_pa: int = 0
     batter_ab: int = 0
+    batter_runs_scored: int = 0
     batter_hits: int = 0
     batter_singles: int = 0
     batter_doubles: int = 0
@@ -59,6 +60,7 @@ def get_batter_header_indices(headers: List[str]) -> Dict[str, int]:
     header_indices["bat_games_start_index"] = __search_with_reasonable_error__(headers, "GS")
     header_indices["bat_pa_index"] = __search_with_reasonable_error__(headers, "PA")
     header_indices["bat_ab_index"] = __search_with_reasonable_error__(headers, "AB")
+    header_indices["bat_runs_scored_index"] = __search_with_reasonable_error__(headers, "R")
     header_indices["bat_h_index"] = __search_with_reasonable_error__(headers, "H")
     header_indices["bat_singles_index"] = __search_with_reasonable_error__(headers, "1B")
     header_indices["bat_doubles_index"] = __search_with_reasonable_error__(headers, "2B")
@@ -91,6 +93,7 @@ def new_stats_batter(header_indices: Dict[str, int], play_line: List[str]) -> St
         batter_games_started=__safe_int__(play_line[header_indices["bat_games_start_index"]]),
         batter_pa=__safe_int__(play_line[header_indices["bat_pa_index"]]),
         batter_ab=__safe_int__(play_line[header_indices["bat_ab_index"]]),
+        batter_runs_scored=__safe_int__(play_line[header_indices["bat_runs_scored_index"]]),
         batter_hits=__safe_int__(play_line[header_indices["bat_h_index"]]),
         batter_singles=__safe_int__(play_line[header_indices["bat_singles_index"]]),
         batter_doubles=__safe_int__(play_line[header_indices["bat_doubles_index"]]),

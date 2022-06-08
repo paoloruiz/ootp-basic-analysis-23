@@ -195,4 +195,6 @@ proj_pitcher_headers: List[Tuple[str, Callable[[ProjectedPitcher], any]]] = [
     ["fip", lambda x: float(x.fip)],
     ["war against (no other pitchers)", lambda x: (float(x.only_pit_war_against))],
     ["war against (per game)", lambda x: float(x.war_against)],
+    ["war", lambda x: float(x.war)],
+    ["war_with_relief", lambda x: float(x.war_with_relief)]
 ]
